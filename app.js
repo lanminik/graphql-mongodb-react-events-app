@@ -1,7 +1,7 @@
-const express = require("express");
-const bodyParser = require("body-parser");
-const qraphqlHttp = require("express-graphql");
-const mongoose = require("mongoose");
+const express = require('express');
+const bodyParser = require('body-parser');
+const qraphqlHttp = require('express-graphql');
+const mongoose = require('mongoose');
 
 const mySchema = require('./graphql/schema');
 const myResolvers = require('./graphql/resolvers');
@@ -14,7 +14,7 @@ app.use(bodyParser.json());
 app.use(isAuth);
 
 app.use(
-  "/graphql",
+  '/graphql',
   qraphqlHttp({
     schema: mySchema,
     rootValue: myResolvers,
