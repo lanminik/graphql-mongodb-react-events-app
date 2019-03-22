@@ -54,14 +54,10 @@ class EventsPage extends Component {
       return;
     }
 
-    const event = { title, price, date, description };
-
     const requestBody = {
       query: `
-          mutation {
-            createEvent(eventInput: {title: "${event.title}", description: "${
-        event.description
-      }", price: ${event.price}, date: "${event.date}"}) {
+          mutation CreateEvent($title: String!, $desc: String!, $price: Float!, $date: String!) {
+            createEvent(eventInput: {title: $title, description: $desc, price: $price, date: $date}) {
               _id
               title
               description
@@ -69,7 +65,13 @@ class EventsPage extends Component {
               price
             }
           }
-        `
+        `,
+        variables: {
+          title: title,
+          desc: description,
+          price: price,
+          date: date
+        }
     };
 
     const token = this.context.token;
@@ -153,12 +155,54 @@ class EventsPage extends Component {
   showDetailHandler = eventId => {
     this.setState(prevState => {
       const selectedEvent = prevState.events.find(e => e._id === eventId);
-      console.log(this.state)
       return { selectedEvent: selectedEvent };
     });
   };
 
-  bookEventHandler = () => {}
+  bookEventHandler = () => {
+    if (!this.context.token) {
+      this.setState({ selectedEvent: null });
+      return;
+    }
+    const requestBody = {
+      query: `
+          mutation BookEvent($id: ID!) {
+            bookEvent(eventId: $id) {
+              _id
+              createdAt
+              updatedAt
+            }
+          }
+        `,
+        variables: {
+          id: this.state.selectedEvent._id
+        }
+    };
+
+    fetch('http://localhost:8000/graphql', {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + this.context.token
+      }
+    })
+      .then(res => {
+        if (res.status !== 200 && res.status !== 201) {
+          throw new Error('Failed!');
+        }
+
+        return res.json();
+      })
+      .then(resData => {
+        console.log(resData);
+        this.setState({ selectedEvent: null });
+      })
+      .catch(err => {
+        this.setState({ isLoading: false });
+        console.log(err);
+      });
+  };
 
   render() {
     return (
@@ -204,10 +248,13 @@ class EventsPage extends Component {
             canConfirm
             onCancel={this.onCancelModalHandler}
             onConfirm={this.bookEventHandler}
-            confirmText="Book"
+            confirmText={this.context.token ? 'Book' : 'Confirm'}
           >
             <h1>{this.state.selectedEvent.title}</h1>
-            <h2>${this.state.selectedEvent.price} - {new Date(this.state.selectedEvent.date).toLocaleDateString()}</h2>
+            <h2>
+              ${this.state.selectedEvent.price} -{' '}
+              {new Date(this.state.selectedEvent.date).toLocaleDateString()}
+            </h2>
             <p>{this.state.selectedEvent.description}</p>
           </Modal>
         )}
