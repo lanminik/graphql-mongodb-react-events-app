@@ -15,12 +15,21 @@ class App extends Component {
     userId: null
   };
 
+  componentDidMount() {
+    const accessToken = JSON.parse(localStorage.getItem('access_token'));
+    if(accessToken) {
+      this.login(accessToken.token, accessToken.userId, accessToken.tokenExpiration);
+    }
+  }
+
   login = (token, userId, tokenExpiration) => {
     this.setState({ token: token, userId: userId });
+    localStorage.setItem('access_token', JSON.stringify({token, userId, tokenExpiration}));
   };
 
   logout = () => {
     this.setState({ token: null, userId: null });
+    localStorage.removeItem('access_token');
   };
 
   render() {
